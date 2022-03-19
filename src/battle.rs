@@ -219,15 +219,15 @@ mod tests {
     use super::*;
     #[test]
     fn test_pts_from_stats() {
-        assert_eq!(points_from_stats(&Class::Naked, 1, &Class::Naked, 0, &Arena::None, &Modifier::None, 0), (1, None));
-        assert_eq!(points_from_stats(&Class::Naked, 0, &Class::Naked, 1, &Arena::None, &Modifier::None, 0), (-1, None));
-        assert_eq!(points_from_stats(&Class::Naked, 5, &Class::Naked, 0, &Arena::None, &Modifier::None, 0), (2, None));
-        assert_eq!(points_from_stats(&Class::Naked, 1, &Class::Naked, 7, &Arena::None, &Modifier::None, 0), (-2, None));
-        assert_eq!(points_from_stats(&Class::Dom, 5, &Class::Naked, 0, &Arena::None, &Modifier::None, 0), (3, None));
-        assert_eq!(points_from_stats(&Class::Dom, 0, &Class::Dom, 5, &Arena::None, &Modifier::None, 0), (-3, None));
-        assert_eq!(points_from_stats(&Class::Naked, 5, &Class::Turtle, 0, &Arena::None, &Modifier::None, 0), (1, None));
-        assert_eq!(points_from_stats(&Class::Turtle, 0, &Class::Naked, 5, &Arena::None, &Modifier::None, 0), (-1, None));
-        assert_eq!(points_from_stats(&Class::Naked, 5, &Class::Naked, 0, &Arena::ClimbingWall, &Modifier::None, 0), (1000001, Some(String::from("f1 wins instantly"))));
-        assert_eq!(points_from_stats(&Class::Naked, 0, &Class::Naked, 5, &Arena::ClimbingWall, &Modifier::None, 0), (-1000001, Some(String::from("f2 wins instantly"))));
+        assert_eq!(points_from_stats(&Class::Naked, 1, &Class::Naked, 0, &Arena::Ampitheater, &Modifier::Rulebook, 0), (1, None));
+        assert_eq!(points_from_stats(&Class::Naked, 0, &Class::Naked, 1, &Arena::Ampitheater, &Modifier::Rulebook, 0), (-1, None));
+        assert_eq!(points_from_stats(&Class::Naked, 5, &Class::Naked, 0, &Arena::Ampitheater, &Modifier::Rulebook, 0), (2, None));
+        assert_eq!(points_from_stats(&Class::Naked, 1, &Class::Naked, 7, &Arena::Ampitheater, &Modifier::Rulebook, 0), (-2, None));
+        assert_eq!(points_from_stats(&Class::Dom, 5, &Class::Naked, 0, &Arena::Ampitheater, &Modifier::Rulebook, 0), (3, None));
+        assert_eq!(points_from_stats(&Class::Dom, 0, &Class::Dom, 5, &Arena::Ampitheater, &Modifier::Rulebook, 0), (-3, None));
+        assert_eq!(points_from_stats(&Class::Naked, 5, &Class::Turtle, 0, &Arena::Ampitheater, &Modifier::Rulebook, 0), (1, None));
+        assert_eq!(points_from_stats(&Class::Turtle, 0, &Class::Naked, 5, &Arena::Ampitheater, &Modifier::Rulebook, 0), (-1, None));
+        assert_eq!(points_from_stats(&Class::Naked, 5, &Class::Naked, 0, &Arena::ClimbingWall, &Modifier::Rulebook, 0), (1000001, Some(String::from("f1 wins instantly"))));
+        assert_eq!(points_from_stats(&Class::Naked, 0, &Class::Naked, 5, &Arena::ClimbingWall, &Modifier::Rulebook, 0), (-1000001, Some(String::from("f2 wins instantly"))));
     }
 }

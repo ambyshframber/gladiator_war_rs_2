@@ -1,0 +1,5 @@
+rework saving/loading system to account for inconsistencies between versions
+impl adding existsing saves and deleting saves properly
+impl cancelling next round
+allow manually selecting arena/modifier
+impl bossfights

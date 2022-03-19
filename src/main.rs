@@ -39,6 +39,8 @@ fn run() -> Result<(), i32> {
     {
         let mut ap = argparse::ArgumentParser::new();
 
+        ap.set_description("gladiator war in rust! see the readme for usage. it's kinda complicated");
+
         ap.refer(&mut command).add_argument("command", Store, "the command to execute").required();
         ap.refer(&mut args_2).add_argument("command", Collect, ".");
 
@@ -149,7 +151,7 @@ fn run() -> Result<(), i32> {
                 println!("[{}] {}", i, po.global_data.saves[i])
             }
         }
-        "add-save" => { // check validity of save, add, exit
+        /*"add-save" => { // check validity of save, add, exit
             match po.global_data.add_save(&args_2[0]) {
                 Ok(_) => {},
                 Err(e) => {
@@ -160,7 +162,9 @@ fn run() -> Result<(), i32> {
         }
         "delete-save" => {
             
-        }
+        }*/
+        // these both need redoing
+
         "new-game" => { // new-game name path
             let alen = args_2.len();
             if alen == 0 {
@@ -267,7 +271,7 @@ fn do_things_to_existing_game(args: Vec<String>, mut game: GameState, po: &utils
                 Ok(v) => v,
                 Err(_) => return Err((String::from("round number failed to parse"), 2))
             };
-            game.display_round(ri - 1)
+            game.display_round(ri)
         }
         "log-round" => {
             if args_2.len() != 1 {
@@ -277,7 +281,7 @@ fn do_things_to_existing_game(args: Vec<String>, mut game: GameState, po: &utils
                 Ok(v) => v,
                 Err(_) => return Err((String::from("round number failed to parse"), 2))
             };
-            game.log_round(ri - 1, po)
+            game.log_round(ri, po)
         }
         "add-stats" => { // add-stats fi st sp sk
             let a2l = args_2.len();
@@ -294,7 +298,7 @@ fn do_things_to_existing_game(args: Vec<String>, mut game: GameState, po: &utils
 
             args_2.remove(0);
 
-            let f = &mut game.fighters[fi - 1];
+            let f = &mut game.fighters[fi];
 
             let mut stats_v: Vec<i32> = Vec::new();
             for stat in args_2 {
@@ -329,7 +333,7 @@ fn do_things_to_existing_game(args: Vec<String>, mut game: GameState, po: &utils
                     return Err((format!("{} does not parse to usize", args_2[1]), 2))
                 }
             };
-            match game.arrange_match(f1i - 1, f2i - 1) {
+            match game.arrange_match(f1i, f2i) {
                 Ok(_) => {}
                 Err(e) => return Err((e, 1))
             }

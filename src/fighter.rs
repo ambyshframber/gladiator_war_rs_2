@@ -25,13 +25,13 @@ pub struct Fighter {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Class {
-    Swarm,
-    Dom,
-    Turtle, // dominations
-    Tank, // injuries
-    Mutant,
-    Cleric,
-    Naked, // doesnt need any impl
+    Swarm, // 2d5 instead of d10
+    Dom, // double points on domination
+    Turtle, // opponent doesn't get bonus points on domination
+    Tank, // roll 2 injury rolls and pick the highest
+    Mutant, // roll 2 dice for a random stat and pick the highest
+    Cleric, // win on a draw
+    Naked, // extra point to start with
 }
 
 impl Default for Class {
@@ -46,7 +46,7 @@ impl Fighter {
         }
     }
 
-    pub fn from_vec(v: &[String]) -> Result<Fighter, String> {
+    pub fn from_vec(v: &[String]) -> Result<Fighter, String> { // used to add fighters from the command line
         match v.len() { // check you have all the fields
             6 => {}
             _ => {
@@ -56,7 +56,7 @@ impl Fighter {
 
         let name = String::from(&v[0]);
         let owner = String::from(&v[1]);
-        let class = match Class::from_str(&v[2]) {
+        let class = match Class::from_str(&v[2]) { // check everything parses and bail out if anything errors
             Ok(v) => v,
             Err(e) => return Err(e)
         };

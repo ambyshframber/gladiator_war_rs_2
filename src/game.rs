@@ -67,7 +67,7 @@ impl GameState {
             }
         }
 
-        let index_pad_amt = self.fighters.len().to_string().len(); // ew
+        let index_pad_amt = (self.fighters.len() - 1).to_string().len(); // ew
         for _ in 0..(index_pad_amt + 3) { // adds spaces to pad the front of the headings
             print!(" ") // a stupid solution to a stupid problem
         }
@@ -79,7 +79,7 @@ impl GameState {
         // class is done lazily cuz it's a discrete thing
         // class as string will never be longer than 6
 
-        let mut i = 1; // didnt want to do the with index thing
+        let mut i = 0; // didnt want to do the with index thing
         for f in &self.fighters {
             let name_pad = f.name.pad_to_width_with_alignment(longest_name_len, Alignment::Right); // pad out names etc
             let owner_pad = f.owner.pad_to_width_with_alignment(longest_owner_len, Alignment::Right);

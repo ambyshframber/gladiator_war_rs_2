@@ -8,7 +8,7 @@ use super::batlog::Batlog;
 
 #[derive(Serialize, Deserialize, Debug, EnumIter, Clone, PartialEq)]
 pub enum Arena {
-    None,
+    Ampitheater, // does nothing
     Siphon, // no class effects
     ClimbingWall, // dominate on strength to win instantly
     Hills, // double speed
@@ -19,14 +19,14 @@ pub enum Arena {
 
 #[derive(Serialize, Deserialize, Debug, EnumIter, Clone, PartialEq)]
 pub enum Modifier {
-    None,
+    Rulebook, // does nothing
     TheCrowdDemandsBlood, // -1 to injury and bonus stat up on kill
     MedicalAssistance, // +1 to injury
     OhShitSheHasAGun, // 10% chance to lose instantly (both players)
     PumpkinSpiceEyeExams, // all stat ups must be spent on skill (doesnt need impl here)
     // something to do with strength
     // something to do with speed
-    FineArt, // something to do with skill
+    //FineArt, // something to do with skill
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -53,10 +53,13 @@ impl GameRound {
 impl fmt::Display for Arena {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", match self {
-            Arena::None => "ampitheater",
+            Arena::Ampitheater => "ampitheater",
             Arena::Siphon => "siphon",
+            Arena::ClimbingWall => "climbing wall",
             Arena::Hills => "hills",
-            _ => "nimpl"
+            Arena::Library => "library",
+            Arena::CrocPit => "crocodile pit",
+            Arena::SoftPlayArea => "soft play area"
         })
     }
 }
@@ -65,10 +68,11 @@ impl fmt::Display for Arena {
 impl fmt::Display for Modifier {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", match self {
-            Modifier::None => "rulebook",
+            Modifier::Rulebook => "rulebook",
             Modifier::MedicalAssistance => "medical assistance",
             Modifier::TheCrowdDemandsBlood => "the crowd demands blood",
-            _ => "nimpl"
+            Modifier::PumpkinSpiceEyeExams => "pumpkin spice eye exams",
+            Modifier::OhShitSheHasAGun => "oh shit the empress has a gun" // you may wish to change this if you build this yourself
         })
     }
 }
