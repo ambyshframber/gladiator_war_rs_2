@@ -30,6 +30,8 @@ lists all save games in the current global data file
 
 this creates a new game with SEASON_NAME as the season name. PATH is optional, and if not provided, the file is created in the current folder with the name generated from the season name. paths can be relative or absolute, but are expanded to absolute when they are stored. this is to allow the program to be run from anywhere and still load the save files correctly
 
+having a path pointing to somewhere other than the current directory doesn't work quite right because of how i implemented my non-repeating filename function, so name collisions result in overwriting the file. be wary
+
 **load** usage: `gladiator-war [OPTIONS] load INDEX COMMAND`
 
 loads a save game and allows you to perform actions on it
@@ -114,6 +116,7 @@ every fighter also has a class, which can change some things about how they beha
 a battle is a (usually violent) event in which 2 fighters have a bit of a barney. a fierce scrap, if you will. a d10 is rolled for every stat and added to it. these stats are then compared to each other
 
 for example, bob has 5 strength and rolls a 7. bill has 4 strength and rolls a 5. bob therefore has 3 higher total strength than bill, so he gains a point. had he had 5 or more greater, he would have gained 2 points. the reverse is also true
+
 this is repeated for every stat, and at the end the fighter with the most rolls wins
 
 **3. injuries**
@@ -135,6 +138,7 @@ if a fighter loses, they must take an injury roll. a d8 is rolled and injuries a
 **4. stat increases and rating**
 
 if a fighter wins, they get a stat increase to spend on any stat they like. i recommend not letting players increase stats past 10, but that's just a recommendation
+
 rating does play a part in this: if the winner has rating 3 or more higher than the loser, they do not get a stat increase and also do not gain rating. the loser also does not lose rating. if they have rating 3 or more lower, they get 2, gain 2 rating, and the loser loses 2 rating. this is intended to stop one or two fighters completely dominating the competition from the early rounds
 
 **5. arranging fights**

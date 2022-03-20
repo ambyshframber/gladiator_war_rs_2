@@ -9,9 +9,6 @@ pub struct Batlog { // nananananananana bat log (battle log)
     pub round_no: i32,
 }
 
-// needs to have methods to add events (injuries, battles etc)
-// needs to be serializable and then easily interpreted by js
-
 impl Batlog {
     pub fn new(round_no: i32) -> Self {
         Batlog {

@@ -13,7 +13,7 @@ use super::utils::{ProgramOptions, fmt_vec, fmt_option, get_non_repeating_filena
 pub struct GameState {
     pub fighters: Vec<Fighter>,
     prev_rounds: Vec<GameRound>,
-    next_round: Option<GameRound>, // new game starts with no next round
+    next_round: Option<GameRound>,
     pub num_rounds: i32,
     pub season_name: String,
     pre_matches: Vec<(usize, usize)> // indexes into fighters
@@ -78,6 +78,7 @@ impl GameState {
         println!("{1}{0}{2}{0} class{0}strength{0}speed{0}skill{0}points{0}total{0}rating{0}kills", Self::TABLE_SEP, name_head, owner_head);
         // class is done lazily cuz it's a discrete thing
         // class as string will never be longer than 6
+        // if this fact ever changes FIX THIS
 
         let mut i = 0; // didnt want to do the with index thing
         for f in &self.fighters {

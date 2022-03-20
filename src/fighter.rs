@@ -39,7 +39,7 @@ impl Default for Class {
 }
 
 impl Fighter {
-    pub fn new(name: String, owner: String, class: Class, strength: i32, speed: i32, skill: i32) -> Fighter{ // add method for from vec later
+    pub fn new(name: String, owner: String, class: Class, strength: i32, speed: i32, skill: i32) -> Fighter{
         Fighter {
             name, owner, class, strength, speed, skill,
             ..Fighter::default() // hehe
@@ -93,14 +93,14 @@ impl Fighter {
                 Class::Tank => {
                     utils::select_largest(thread_rng().gen_range(0..8), thread_rng().gen_range(0..8)) // best of 2 rolls
                 }
-                _ => thread_rng().gen_range(0..8) // no other classes affect injury rolls
+                _ => thread_rng().gen_range(0..8) // no other classes affect injury rolls (yet)
             }
         };
 
         batlog.set_injury(Some(roll));
 
-        match roll { // injury table. add logging Later tm
-            i32::MIN..=0 => {
+        match roll { // injury table
+            i32::MIN..=0 => { // injury rolls can go negative
                 self.dead = true;
             }
             1 => {

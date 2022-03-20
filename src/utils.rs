@@ -3,7 +3,7 @@ use std::fs;
 use std::path::Path;
 use std::fmt;
 
-use super::global;
+use crate::global;
 
 pub fn select_largest<T: std::cmp::PartialOrd>(a: T, b: T) -> T { // generic cuz im feeling like a clever fucker today
     match a.partial_cmp(&b) {
@@ -17,6 +17,7 @@ pub fn select_largest<T: std::cmp::PartialOrd>(a: T, b: T) -> T { // generic cuz
     }
 }
 
+// this is clunky as fuck someone please fix it
 pub fn get_non_repeating_filename(folder_path: &str, filename: &str, extension: &str) -> Result<String, String> { // does NOT want dots
     let dir = match fs::read_dir(Path::new(folder_path)) {
         Ok(rd) => rd,
@@ -68,7 +69,7 @@ fn string_ends_with(s: &str, e: &str) -> bool { // string, end
     if e.len() > s.len() {
         return false
     }
-    &s[s.len() - e.len()..s.len()] == e
+    &s[s.len() - e.len()..] == e // i got nothin on this one
 }
 
 #[derive(Default)]
@@ -94,7 +95,7 @@ pub fn fmt_vec<T: fmt::Display>(v: &Vec<T>) -> String {
         ret.push_str(&format!("{}, ", i))
     }
 
-    String::from(&ret[..ret.len()-2])
+    String::from(&ret[..ret.len()-2]) // remove trailing comma
 }
 
 pub fn fmt_option<T: fmt::Display>(o: &Option<T>) -> String {
