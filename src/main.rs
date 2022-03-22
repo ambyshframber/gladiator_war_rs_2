@@ -15,8 +15,9 @@ mod batlog;
 mod global;
 mod round;
 mod battle;
+mod boss;
 
-const VERSION: &str = "0.0.1";
+const VERSION: &str = "0.1.0";
 
 fn main() {
     match run() {
@@ -45,7 +46,7 @@ fn run() -> Result<(), i32> {
         ap.refer(&mut args_2).add_argument("command", Collect, ".");
 
         ap.refer(&mut po.verbosity).add_option(&["-v"], IncrBy(1), "controls how loud the program is").add_option(&["-q"], DecrBy(1), "quiet");
-        ap.refer(&mut po.logging).add_option(&["-l"], StoreTrue, "logs battles to a text file");
+        ap.refer(&mut po.logging).add_option(&["-l"], StoreTrue, "automatically logs battles to a text file");
         ap.refer(&mut global_path_option).add_option(&["-g"], StoreOption, "path to a global data file");
 
         ap.stop_on_first_argument(true);
@@ -69,7 +70,9 @@ fn run() -> Result<(), i32> {
         }
     };
     let global_data = if !Path::new(&global_path).exists() { // file does NOT exist
-        println!("could not find global data file, creating a default in current location (consider setting the AJAL_GW_DATA_PATH environment variable)");
+        if po.verbosity > -1 {
+            println!("could not find global data file, creating a default in current location (consider setting the AJAL_GW_DATA_PATH environment variable)")
+        }
         let data = GwGlobalData::default();
         let _ = data.save_to_file(&global_path); // save it here as well as later
         data
@@ -141,7 +144,7 @@ fn run() -> Result<(), i32> {
         }
 
         "help" => {
-            print_help();
+            print_help(); // unfinished
             return Ok(())
         }
 
@@ -343,9 +346,16 @@ fn do_things_to_existing_game(args: Vec<String>, mut game: GameState, po: &utils
         "run-round" => { // run match, store results in log, possibly give hr text log file, exit
             game.run_round(po)
         }
-        "new-round" => {
-            game.new_round(po)
+        "new-round" => { // new argparser for arena and mod??
+            match game.new_round(po, &mut args_2) {
+                Ok(()) => {},
+                Err(e) => return Err((e, 2))
+            }
         }
+        "cancel-round" => {
+            game.cancel_next_round(po)
+        }
+
         _ => {
             return Err((format!("unrecognised command {}", command), 1))
         }
@@ -356,5 +366,5 @@ fn do_things_to_existing_game(args: Vec<String>, mut game: GameState, po: &utils
 
 fn print_help() {
     println!("welcome to version {} of the gladiator war CLI", VERSION);
-    println!("available commands: ")
+    println!("please see the readme for usage instructions. it's kinda complicated")
 }

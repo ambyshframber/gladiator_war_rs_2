@@ -3,6 +3,7 @@ use rand::prelude::IteratorRandom;
 use strum_macros::*;
 use strum::IntoEnumIterator;
 use std::fmt;
+use std::str::FromStr;
 
 use super::batlog::Batlog;
 
@@ -63,6 +64,22 @@ impl fmt::Display for Arena {
         })
     }
 }
+impl FromStr for Arena {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Arena, String> { // DO THIS AGAIN FOR MODS
+        Ok(match s.to_lowercase().as_str() {
+            "ampitheater" | "amp" => Arena::Ampitheater,
+            "siphon" => Arena::Siphon,
+            "climbingwall" => Arena::ClimbingWall,
+            "hills" => Arena::Hills,
+            "library" => Arena::Library,
+            "crocpit" => Arena::CrocPit,
+            "softplayarea" | "softplay" => Arena::SoftPlayArea,
+            _ => return Err(format!("arena {} failed to parse!", s))
+        })
+    }
+}
 
 #[allow(unreachable_patterns)]
 impl fmt::Display for Modifier {
@@ -73,6 +90,21 @@ impl fmt::Display for Modifier {
             Modifier::TheCrowdDemandsBlood => "the crowd demands blood",
             Modifier::PumpkinSpiceEyeExams => "pumpkin spice eye exams",
             Modifier::OhShitSheHasAGun => "oh shit the empress has a gun" // you may wish to change this if you build this yourself
+        })
+    }
+}
+
+impl FromStr for Modifier {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Modifier, String> {
+        Ok(match s.to_lowercase().as_str() {
+            "rulebook" | "rules" => Modifier::Rulebook,
+            "medicalassistance" | "meds" => Modifier::MedicalAssistance,
+            "thecrowddemandsblood" | "blood" => Modifier::TheCrowdDemandsBlood,
+            "pumpkinspiceeyeexams" | "eyeexams" | "eyes" => Modifier::PumpkinSpiceEyeExams,
+            "ohshitshehasagun" | "ohshit" | "gun" => Modifier::OhShitSheHasAGun,
+            _ => return Err(format!("modifier {} failed to parse!", s))
         })
     }
 }

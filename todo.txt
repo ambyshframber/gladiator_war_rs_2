@@ -1,5 +1,12 @@
-rework saving/loading system to account for inconsistencies between versions
-impl adding existsing saves and deleting saves properly
-impl cancelling next round
-allow manually selecting arena/modifier
+rework saving/loading system to account for inconsistencies between versions 
+- wait until full version before doing backwards compat
+- dont have any backwards to compat with atm
+impl adding existing saves and deleting saves properly
+impl cancelling next round - done
+allow manually selecting arena/modifier - done
 impl bossfights
+- needs a lot of refactoring
+impl FromStr for class, arena and modifier - done
+impl Display for battle result
+write class/arena/modifier lists for readme
+- obtain Funny Images

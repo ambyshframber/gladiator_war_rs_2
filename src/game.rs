@@ -3,9 +3,11 @@ use rand::thread_rng;
 use rand::seq::SliceRandom;
 use std::fs;
 use pad::{PadStr, Alignment};
+use argparse::{ArgumentParser, StoreOption};
+use std::io::{stdout, stderr};
 
 use super::fighter::*;
-use super::round::GameRound;
+use super::round::{GameRound, Arena, Modifier};
 use super::battle;
 use super::utils::{ProgramOptions, fmt_vec, fmt_option, get_non_repeating_filename, fmt_vec_with_tabs};
 
@@ -106,12 +108,15 @@ impl GameState {
         let mut i = 0;
         for matchup in &r.matchups {
             let (f1, f2) = *matchup;
-            ret.push_str(&format!("\t{} VS {}\n", self.fighters[f1].name, self.fighters[f2].name));
+            let f1name = &self.fighters[f1].name;
+            let f2name = &self.fighters[f2].name;
+            ret.push_str(&format!("\t{} VS {}\n", f1name, f2name));
             if round_run { // only log results if the round has been run. they don't exist otherwise
                 let battle = &r.log.fights[i];
                 ret.push_str(&format!("\t\trolls:\n\t\t\t{} VS {}\n", fmt_vec(&battle.rolls_1), fmt_vec(&battle.rolls_2)));
-                ret.push_str(&format!("\t\tinjuries:\n\t\t\tplayer 1: {}\n\t\t\tplayer 2: {}\n", fmt_option(&battle.injury_1), fmt_option(&battle.injury_2))); // lotsa tabs
+                ret.push_str(&format!("\t\tinjuries:\n\t\t\t{}: {}\n\t\t\t{}: {}\n", f1name, fmt_option(&battle.injury_1), f2name, fmt_option(&battle.injury_2))); // lotsa tabs
                 ret.push_str(&format!("\t\tother events:\n{}", fmt_vec_with_tabs(&battle.other_events, 3)))
+                // result here
             }
             i += 1;
         }
@@ -178,15 +183,66 @@ impl GameState {
 
     // game features
 
-    pub fn new_round(&mut self, po: &ProgramOptions) { // generate round and store
+    pub fn new_round(&mut self, po: &ProgramOptions, args: &mut Vec<String>) -> Result<(), String> { // generate round and store
         let (mut matchups, sitting_out) = generate_matchups(&self.fighters);
         matchups.append(&mut self.pre_matches);
-        let round = GameRound::new(matchups, sitting_out, self.num_rounds + 1);
+        let mut round = GameRound::new(matchups, sitting_out, self.num_rounds + 1);
+
+        if args.len() != 0 { // manual arena/mod choice
+            let mut arena: Option<String> = None;
+            let mut modifier: Option<String> = None;
+
+            args.insert(0, String::from("new-round")); // argparse needs the name of the program/command as args[0] to work
+
+            //println!("{:?}", args);
+
+            {
+                let mut ap = ArgumentParser::new();
+                ap.set_description("generates a new round in the current loaded game");
+                ap.refer(&mut arena).add_option(&["-a"], StoreOption, "choose an arena manually");
+                ap.refer(&mut modifier).add_option(&["-m"], StoreOption, "chose a modifier manually");
+
+                match ap.parse(args.clone(), &mut stdout(), &mut stderr()) {
+                    Ok(_) => {},
+                    Err(_) => return Err(String::from("unknown argument parser error!")) // reports an error on --help. maybe fix?
+                }
+            }
+
+            match arena {
+                Some(a) => {
+                    match a.parse::<Arena>() {
+                        Ok(v) => round.arena = v,
+                        Err(e) => return Err(e)
+                    }
+                }
+                None => {}
+            }
+            match modifier {
+                Some(m) => {
+                    match m.parse::<Modifier>() {
+                        Ok(v) => round.modifier = v,
+                        Err(e) => return Err(e)
+                    }
+                }
+                None => {}
+            }
+        }
 
         if po.verbosity > -1 {
             println!("{}", self.format_round(&round))
         }
         self.next_round = Some(round);
+
+        Ok(())
+    }
+    pub fn cancel_next_round(&mut self, po: &ProgramOptions) {
+        if po.verbosity > -1 {
+            match self.next_round {
+                Some(_) => println!("cancelling round {}", self.num_rounds + 1),
+                None => println!("no scheduled round to cancel")
+            }
+        }
+        self.next_round = None
     }
 
     pub fn run_round(&mut self, po: &ProgramOptions) {

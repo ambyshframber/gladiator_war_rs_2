@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use rand::{thread_rng, Rng};
 use std::fmt;
+use std::str::FromStr;
 
 use super::utils;
 use super::batlog::Batlog;
@@ -26,7 +27,7 @@ pub struct Fighter {
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Class {
     Swarm, // 2d5 instead of d10
-    Dom, // double points on domination
+    Dom, // additional bonus point on domination
     Turtle, // opponent doesn't get bonus points on domination
     Tank, // roll 2 injury rolls and pick the highest
     Mutant, // roll 2 dice for a random stat and pick the highest
@@ -56,7 +57,7 @@ impl Fighter {
 
         let name = String::from(&v[0]);
         let owner = String::from(&v[1]);
-        let class = match Class::from_str(&v[2]) { // check everything parses and bail out if anything errors
+        let class = match v[2].parse::<Class>() { // check everything parses and bail out if anything errors
             Ok(v) => v,
             Err(e) => return Err(e)
         };
@@ -169,9 +170,9 @@ impl Fighter {
     }
 }
 
-impl Class {
+/*impl Class {
     pub fn from_str(s: &str) -> Result<Self, String> {
-        Ok(match s {
+        Ok(match s.to_lowercase().as_str() {
             "swarm" => Class::Swarm,
             "dom" => Class::Dom,
             "turtle" => Class::Turtle,
@@ -180,6 +181,23 @@ impl Class {
             "cleric" => Class::Cleric,
             "naked" => Class::Naked,
             _ => return Err(format!("class {} not recognised!", s))
+        })
+    }
+}*/
+
+impl FromStr for Class { // much cleaner
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, String> {
+        Ok(match s.to_lowercase().as_str() {
+            "swarm" => Class::Swarm,
+            "dom" => Class::Dom,
+            "turtle" => Class::Turtle,
+            "tank" => Class::Tank,
+            "mutant" => Class::Mutant,
+            "cleric" => Class::Cleric,
+            "naked" => Class::Naked,
+            _ => return Err(format!("class {} failed to parse!", s))
         })
     }
 }
@@ -195,7 +213,6 @@ impl fmt::Display for Class {
             Class::Mutant => "mutant",
             Class::Swarm => "swarm",
             Class::Naked => "naked",
-            _ => "nimpl"
         })
     }
 }

@@ -45,12 +45,15 @@ this is the big one. INDEX is the index of the save game in the list (use `list-
 valid commands are:
 
 **info**:
+
 prints info about the current save game. basically just the name and number of rounds played so far
 
 **list-fighters**:
+
 lists all fighters (alive or dead) in a nice table, complete with all stats
 
 **add-fighter**: usage: `... add-fighter NAME OWNER CLASS STRENGTH SPEED SKILL`
+
 adds a fighter to the selected game. all arguments are required. see the rules documentation to learn what they mean
 
 adding other stats here is not yet supported, so you're gonna have to edit the save file by hand. sorry.
