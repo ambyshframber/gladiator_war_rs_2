@@ -7,18 +7,18 @@ use argparse::{ArgumentParser, StoreOption};
 use std::io::{stdout, stderr};
 
 use super::fighter::*;
-use super::round::{GameRound, Arena, Modifier};
-use super::battle;
+use super::round::{GameRound, Arena, Modifier, Round};
+use super::battle::{battle, BattleResult};
 use super::utils::{ProgramOptions, fmt_vec, fmt_option, get_non_repeating_filename, fmt_vec_with_tabs};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GameState {
     pub fighters: Vec<Fighter>,
-    prev_rounds: Vec<GameRound>,
-    next_round: Option<GameRound>,
+    prev_rounds: Vec<Round>,
+    next_round: Option<Round>,
     pub num_rounds: i32,
     pub season_name: String,
-    pre_matches: Vec<(usize, usize)> // indexes into fighters
+    pre_matches: Vec<(usize, usize)>, // indexes into fighters
 }
 
 impl GameState {
@@ -99,40 +99,62 @@ impl GameState {
             i += 1
         }
     }
-    fn format_round(&self, r: &GameRound) -> String {
+    fn format_round(&self, round: &Round) -> String {
         let mut ret = String::new();
-        let round_run = r.log.fights.len() != 0; // check if the round is in the past
-        // i coulda done that with a bool but it would fuck up the existing test save
 
-        ret.push_str(&format!("round {}\narena: {}\nmodifier: {}\nmatchups:\n", r.log.round_no, r.arena, r.modifier));
-        let mut i = 0;
-        for matchup in &r.matchups {
-            let (f1, f2) = *matchup;
-            let f1name = &self.fighters[f1].name;
-            let f2name = &self.fighters[f2].name;
-            ret.push_str(&format!("\t{} VS {}\n", f1name, f2name));
-            if round_run { // only log results if the round has been run. they don't exist otherwise
-                let battle = &r.log.fights[i];
-                ret.push_str(&format!("\t\trolls:\n\t\t\t{} VS {}\n", fmt_vec(&battle.rolls_1), fmt_vec(&battle.rolls_2)));
-                ret.push_str(&format!("\t\tinjuries:\n\t\t\t{}: {}\n\t\t\t{}: {}\n", f1name, fmt_option(&battle.injury_1), f2name, fmt_option(&battle.injury_2))); // lotsa tabs
-                ret.push_str(&format!("\t\tother events:\n{}", fmt_vec_with_tabs(&battle.other_events, 3)))
-                // result here
+        match round {
+            Round::Standard(r) => {
+                let round_run = r.log.fights.len() != 0; // check if the round is in the past
+                // i coulda done that with a bool but it would fuck up the existing test save (i am Very Lazy)
+
+                ret.push_str(&format!("round {}\narena: {}\nmodifier: {}\nmatchups:\n", r.log.round_no, r.arena, r.modifier));
+                let mut i = 0;
+                for matchup in &r.matchups {
+                    let (f1, f2) = *matchup;
+                    let f1name = &self.fighters[f1].name;
+                    let f2name = &self.fighters[f2].name;
+                    ret.push_str(&format!("\t{} VS {}\n", f1name, f2name));
+                    if round_run { // only log results if the round has been run. they don't exist otherwise
+                        let battle = &r.log.fights[i];
+                        ret.push_str(&format!("\t\trolls:\n\t\t\t{} VS {}\n", fmt_vec(&battle.rolls_1), fmt_vec(&battle.rolls_2)));
+                        ret.push_str(&format!("\t\tinjuries:\n\t\t\t{}: {}\n\t\t\t{}: {}\n", f1name, fmt_option(&battle.injury_1), f2name, fmt_option(&battle.injury_2))); // lotsa tabs
+                        ret.push_str(&format!("\t\tother events:\n{}", fmt_vec_with_tabs(&battle.other_events, 3)));
+
+                        type Res = BattleResult; // arguably makes code easier to read i guess???
+                        match battle.result {
+                            Res::F1Win | Res::F1WinFromCleric => {
+                                ret.push_str(&format!("\t\twinner: {}", f1name))
+                            }
+                            Res::F2Win | Res::F2WinFromCleric => {
+                                ret.push_str(&format!("\t\twinner: {}", f2name))
+                            }
+                            Res::Draw | Res::DrawFromCleric => {
+                                ret.push_str(&format!("\t\tdraw!"))
+                            }
+                        }
+                    }
+                    i += 1;
+                }
+                match r.sitting_out {
+                    Some(i) => {
+                        ret.push_str(&format!("\t{} sits out", self.fighters[i].name))
+                    }
+                    None => {}
+                }
             }
-            i += 1;
-        }
-        match r.sitting_out {
-            Some(i) => {
-                ret.push_str(&format!("\t{} sits out", self.fighters[i].name))
-            }
-            None => {}
+            Round::Boss(_) => panic!() // not implemented
         }
 
         ret
     }
-    fn log_round_priv(&self, r: &GameRound, po: &ProgramOptions) {
+    fn log_round_priv(&self, r: &Round, po: &ProgramOptions) {
         let filename = &po.global_data.default_batlog_name; // get template
         let filename = filename.replace("%S", &self.season_name); // run replacements
-        let filename = filename.replace("%R", &r.log.round_no.to_string());
+        let round_num = match r {
+            Round::Standard(v) => v.log.round_no,
+            Round::Boss(_) => panic!()
+        };
+        let filename = filename.replace("%R", &round_num.to_string());
         let filename = filename.replace(" ", "_"); // not strictly necessary but fuck you
         let filename = match get_non_repeating_filename(".", &filename, "txt") {
             Ok(v) => v,
@@ -228,10 +250,12 @@ impl GameState {
             }
         }
 
+        let r = Round::Standard(round);
+
         if po.verbosity > -1 {
-            println!("{}", self.format_round(&round))
+            println!("{}", self.format_round(&r))
         }
-        self.next_round = Some(round);
+        self.next_round = Some(r);
 
         Ok(())
     }
@@ -246,34 +270,39 @@ impl GameState {
     }
 
     pub fn run_round(&mut self, po: &ProgramOptions) {
-        let r = match &mut self.next_round { // check next round exists
+        let round = match &mut self.next_round { // check next round exists
             Some(r) => r,
             None => {
                 println!("next round not yet generated!"); 
                 return // exit without panicking
             }
         };
+
+        match round {
+            Round::Standard(r) => {
+                for (f1i, f2i) in &r.matchups {
+                    r.log.advance_to_next_battle(*f1i, *f2i);
+                    let mut f1 = self.fighters[*f1i].clone(); // cant take 2 mut slices even though they don't overlap
+                    let mut f2 = self.fighters[*f2i].clone();
+                    f1.pre_matched = false; // if you leave prematched on they wont get matched again next round
+                    f2.pre_matched = false;
         
-        for (f1i, f2i) in &r.matchups {
-            r.log.advance_to_next_battle(*f1i, *f2i);
-            let mut f1 = self.fighters[*f1i].clone(); // cant take 2 mut slices even though they don't overlap
-            let mut f2 = self.fighters[*f2i].clone();
-            f1.pre_matched = false; // if you leave prematched on they wont get matched again next round
-            f2.pre_matched = false;
-
-            battle::battle(&mut f1, &mut f2, &r.arena, &r.modifier, &mut r.log);
-
-            self.fighters[*f1i] = f1; // put back into list
-            self.fighters[*f2i] = f2;
-        }
-
-        self.prev_rounds.push(r.clone());
-        let r = &self.prev_rounds[self.num_rounds as usize]; // probably a better way to do this but the borrow checker gets angry if i use r from earlier
-        if po.verbosity > -1 {
-            println!("{}", self.format_round(&r))
-        }
-        if po.logging {
-            self.log_round_priv(&r, po)
+                    battle(&mut f1, &mut f2, &r.arena, &r.modifier, &mut r.log);
+        
+                    self.fighters[*f1i] = f1; // put back into list
+                    self.fighters[*f2i] = f2;
+                }
+        
+                self.prev_rounds.push(round.clone());
+                let r = &self.prev_rounds[self.num_rounds as usize]; // probably a better way to do this but the borrow checker gets angry if i use r from earlier
+                if po.verbosity > -1 {
+                    println!("{}", self.format_round(&r))
+                }
+                if po.logging {
+                    self.log_round_priv(&r, po)
+                }
+            }
+            Round::Boss(_) => panic!()
         }
         self.next_round = None;
         self.num_rounds += 1;

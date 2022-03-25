@@ -5,7 +5,9 @@ use strum::IntoEnumIterator;
 use std::fmt;
 use std::str::FromStr;
 
+use crate::boss::BossRound;
 use super::batlog::Batlog;
+
 
 #[derive(Serialize, Deserialize, Debug, EnumIter, Clone, PartialEq)]
 pub enum Arena {
@@ -37,6 +39,12 @@ pub struct GameRound {
     pub arena: Arena,
     pub modifier: Modifier,
     pub log: Batlog,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Round {
+    Standard(GameRound),
+    Boss(BossRound)
 }
 
 impl GameRound {

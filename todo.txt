@@ -6,9 +6,11 @@ impl cancelling next round - done
 allow manually selecting arena/modifier - done
 impl bossfights
 - needs a lot of refactoring
+- save for post 1.0
 impl FromStr for class, arena and modifier - done
 impl Display for battle result
 write class/arena/modifier lists for readme
 - obtain Funny Images
 add custom log names for log-round
 impl olympic inspector
+add batlog path options
