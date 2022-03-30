@@ -18,6 +18,7 @@ impl Default for GwGlobalData {
 }
 
 impl GwGlobalData {
+    #[allow(dead_code)] // shut up
     pub fn add_save(&mut self, filename: &str) -> Result<(), String> {
         match game::GameState::load_from_file(filename) {
             Ok(_) => {
