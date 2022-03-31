@@ -4,9 +4,12 @@ use strum_macros::*;
 use strum::IntoEnumIterator;
 use std::fmt;
 use std::str::FromStr;
+use rand::thread_rng;
+use rand::seq::SliceRandom;
 
 use crate::boss::BossRound;
-use super::batlog::Batlog;
+use crate::batlog::Batlog;
+use crate::fighter::Fighter;
 
 
 #[derive(Serialize, Deserialize, Debug, EnumIter, Clone, PartialEq)]
@@ -30,6 +33,7 @@ pub enum Modifier {
     // something to do with strength
     // something to do with speed
     //FineArt, // something to do with skill
+    OlympicInspector,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -48,11 +52,22 @@ pub enum Round {
 }
 
 impl GameRound {
-    pub fn new(matchups: Vec<(usize, usize)>, sitting_out: Option<usize>, round_no: i32) -> GameRound {
+    pub fn new(fighters: &Vec<Fighter>, pre_matches: &mut Vec<(usize, usize)>, round_no: i32) -> GameRound {
+        let modifier = Modifier::iter().choose(&mut rand::thread_rng()).unwrap();
+        let (mut matchups, sitting_out) = match modifier {
+            Modifier::OlympicInspector => {
+                generate_olympics(fighters)
+            }
+            _ => {
+                generate_matchups(fighters)
+            }
+        };
+        matchups.append(pre_matches);
+
         GameRound {
             matchups, sitting_out,
             arena: Arena::iter().choose(&mut rand::thread_rng()).unwrap(), // unwrap instead of match bc iters will never be empty
-            modifier: Modifier::iter().choose(&mut rand::thread_rng()).unwrap(),
+            modifier,
             log: Batlog::new(round_no)
         }
     }
@@ -97,7 +112,8 @@ impl fmt::Display for Modifier {
             Modifier::MedicalAssistance => "medical assistance",
             Modifier::TheCrowdDemandsBlood => "the crowd demands blood",
             Modifier::PumpkinSpiceEyeExams => "pumpkin spice eye exams",
-            Modifier::OhShitSheHasAGun => "oh shit the empress has a gun" // you may wish to change this if you build this yourself
+            Modifier::OhShitSheHasAGun => "oh shit the empress has a gun", // you may wish to change this if you build this yourself
+            Modifier::OlympicInspector => "olympic inspector"
         })
     }
 }
@@ -112,7 +128,63 @@ impl FromStr for Modifier {
             "thecrowddemandsblood" | "blood" => Modifier::TheCrowdDemandsBlood,
             "pumpkinspiceeyeexams" | "eyeexams" | "eyes" => Modifier::PumpkinSpiceEyeExams,
             "ohshitshehasagun" | "ohshit" | "gun" => Modifier::OhShitSheHasAGun,
+            "olympicinspector" | "olympic" | "inspector" => Modifier::OlympicInspector,
             _ => return Err(format!("modifier {} failed to parse!", s))
         })
     }
+}
+
+fn generate_matchups(fighters: &[Fighter]) -> (Vec<(usize, usize)>, Option<usize>) {
+    let mut ret: Vec<(usize, usize)> = Vec::new();
+    let mut living_fighters: Vec<usize> = Vec::new();
+    
+    for i in 0..fighters.len() { // select fighters elegible for auto matching
+        if !fighters[i].dead && !fighters[i].pre_matched { // dead fighters can't fight, pre matched fighters should not be auto matched
+            living_fighters.push(i);
+        }
+    }
+
+    //println!("{:?}", living_fighters);
+    
+    living_fighters.shuffle(&mut thread_rng()); // shuffle
+    
+    let sitting_out = if living_fighters.len() % 2 != 0 { // odd number of fighters
+        living_fighters.pop() // this is easier than impling 3 ways
+    }
+    else {
+        None
+    };
+
+    for i in (0..living_fighters.len()).step_by(2) { // step through in pairs
+        ret.push((living_fighters[i], living_fighters[i + 1])); // list SHOULD only ever be multiple of 2 length
+    }
+    
+    (ret, sitting_out)
+}
+
+fn generate_olympics(fighters: &[Fighter]) -> (Vec<(usize, usize)>, Option<usize>) {
+    let mut ret: Vec<(usize, usize)> = Vec::new();
+    let mut living_fighters: Vec<usize> = Vec::new();
+    
+    for i in 0..fighters.len() { // select fighters elegible for auto matching
+        if !fighters[i].dead && !fighters[i].pre_matched { // dead fighters can't fight, pre matched fighters should not be auto matched
+            living_fighters.push(i);
+        }
+    }
+    
+    living_fighters.shuffle(&mut thread_rng()); // shuffle
+    
+    let sitting_out = if living_fighters.len() % 2 != 0 { // odd number of fighters
+        living_fighters.pop() // this is easier than impling 3 ways
+    }
+    else {
+        None
+    };
+
+    living_fighters.sort_by(|a, b| fighters[*a].rating.partial_cmp(&fighters[*b].rating).unwrap());
+    for i in (0..living_fighters.len()).step_by(2) { // step through in pairs
+        ret.push((living_fighters[i], living_fighters[i + 1])); // list SHOULD only ever be multiple of 2 length
+    }
+
+    (ret, sitting_out)
 }

@@ -1,6 +1,4 @@
 use serde::{Serialize, Deserialize};
-use rand::thread_rng;
-use rand::seq::SliceRandom;
 use std::fs;
 use pad::{PadStr, Alignment};
 use argparse::{ArgumentParser, StoreOption};
@@ -142,7 +140,7 @@ impl GameState {
                     None => {}
                 }
             }
-            Round::Boss(_) => panic!() // not implemented
+            Round::Boss(_) => unreachable!() // not implemented
         }
 
         ret
@@ -152,7 +150,7 @@ impl GameState {
         let filename = filename.replace("%S", &self.season_name); // run replacements
         let round_num = match r {
             Round::Standard(v) => v.log.round_no,
-            Round::Boss(_) => panic!()
+            Round::Boss(_) => unreachable!()
         };
         let filename = filename.replace("%R", &round_num.to_string());
         let filename = filename.replace(" ", "_"); // not strictly necessary but fuck you
@@ -206,9 +204,9 @@ impl GameState {
     // game features
 
     pub fn new_round(&mut self, po: &ProgramOptions, args: &mut Vec<String>) -> Result<(), String> { // generate round and store
-        let (mut matchups, sitting_out) = generate_matchups(&self.fighters);
-        matchups.append(&mut self.pre_matches);
-        let mut round = GameRound::new(matchups, sitting_out, self.num_rounds + 1);
+        // let (mut matchups, sitting_out) = generate_matchups(&self.fighters);
+        // matchups.append(&mut self.pre_matches);
+        let mut round = GameRound::new(&self.fighters, &mut self.pre_matches, self.num_rounds + 1);
 
         if args.len() != 0 { // manual arena/mod choice
             let mut arena: Option<String> = None;
@@ -226,7 +224,10 @@ impl GameState {
 
                 match ap.parse(args.clone(), &mut stdout(), &mut stderr()) {
                     Ok(_) => {},
-                    Err(_) => return Err(String::from("unknown argument parser error!")) // reports an error on --help. maybe fix?
+                    Err(e) => match e {
+                        0 => {}
+                        _ => return Err(String::from("unknown argument parser error!"))
+                    }
                 }
             }
 
@@ -302,37 +303,9 @@ impl GameState {
                     self.log_round_priv(&r, po)
                 }
             }
-            Round::Boss(_) => panic!()
+            Round::Boss(_) => unreachable!()
         }
         self.next_round = None;
         self.num_rounds += 1;
     }
-}
-
-fn generate_matchups(fighters: &[Fighter]) -> (Vec<(usize, usize)>, Option<usize>) {
-    let mut ret: Vec<(usize, usize)> = Vec::new();
-    let mut living_fighters: Vec<usize> = Vec::new();
-    
-    for i in 0..fighters.len() { // select fighters elegible for auto matching
-        if !fighters[i].dead && !fighters[i].pre_matched { // dead fighters can't fight, pre matched fighters should not be auto matched
-            living_fighters.push(i);
-        }
-    }
-
-    //println!("{:?}", living_fighters);
-    
-    living_fighters.shuffle(&mut thread_rng()); // shuffle
-    
-    let sitting_out = if living_fighters.len() % 2 != 0 { // odd number of fighters
-        living_fighters.pop() // this is easier than impling 3 ways
-    }
-    else {
-        None
-    };
-
-    for i in (0..living_fighters.len()).step_by(2) { // step through in pairs
-        ret.push((living_fighters[i], living_fighters[i + 1])); // list SHOULD only ever be multiple of 2 length
-    }
-    
-    (ret, sitting_out)
 }
