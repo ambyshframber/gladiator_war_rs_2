@@ -15,6 +15,7 @@ use crate::fighter::Fighter;
 #[derive(Serialize, Deserialize, Debug, EnumIter, Clone, PartialEq)]
 pub enum Arena {
     Ampitheater, // does nothing
+    // this is spelled wrong SHUT UP
     Siphon, // no class effects
     ClimbingWall, // dominate on strength to win instantly
     Hills, // double speed
@@ -52,8 +53,11 @@ pub enum Round {
 }
 
 impl GameRound {
-    pub fn new(fighters: &Vec<Fighter>, pre_matches: &mut Vec<(usize, usize)>, round_no: i32) -> GameRound {
-        let modifier = Modifier::iter().choose(&mut rand::thread_rng()).unwrap();
+    pub fn new(fighters: &Vec<Fighter>, pre_matches: &mut Vec<(usize, usize)>, round_no: i32, arena: Option<Arena>, modifier: Option<Modifier>) -> GameRound {
+        let modifier = match modifier {
+            None => Modifier::iter().choose(&mut rand::thread_rng()).unwrap(),
+            Some(m) => m
+        };
         let (mut matchups, sitting_out) = match modifier {
             Modifier::OlympicInspector => {
                 generate_olympics(fighters)
@@ -64,10 +68,13 @@ impl GameRound {
         };
         matchups.append(pre_matches);
 
+        let arena = match arena {
+            None => Arena::iter().choose(&mut rand::thread_rng()).unwrap(),
+            Some(a) => a
+        };
+
         GameRound {
-            matchups, sitting_out,
-            arena: Arena::iter().choose(&mut rand::thread_rng()).unwrap(), // unwrap instead of match bc iters will never be empty
-            modifier,
+            matchups, sitting_out, arena, modifier,
             log: Batlog::new(round_no)
         }
     }
@@ -77,11 +84,11 @@ impl GameRound {
 impl fmt::Display for Arena {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", match self {
-            Arena::Ampitheater => "ampitheater",
+            Arena::Ampitheater => "amphitheatre",
             Arena::Siphon => "siphon",
             Arena::ClimbingWall => "climbing wall",
             Arena::Hills => "hills",
-            Arena::Library => "library",
+            Arena::Library => "mech suits",
             Arena::CrocPit => "crocodile pit",
             Arena::SoftPlayArea => "soft play area"
         })
@@ -90,13 +97,13 @@ impl fmt::Display for Arena {
 impl FromStr for Arena {
     type Err = String;
 
-    fn from_str(s: &str) -> Result<Arena, String> { // DO THIS AGAIN FOR MODS
+    fn from_str(s: &str) -> Result<Arena, String> {
         Ok(match s.to_lowercase().as_str() {
-            "ampitheater" | "amp" => Arena::Ampitheater,
+            "amphitheater" | "amp" | "amphithetre" => Arena::Ampitheater,
             "siphon" => Arena::Siphon,
             "climbingwall" => Arena::ClimbingWall,
             "hills" => Arena::Hills,
-            "library" => Arena::Library,
+            "library" | "mechsuits" | "mechs" => Arena::Library,
             "crocpit" => Arena::CrocPit,
             "softplayarea" | "softplay" => Arena::SoftPlayArea,
             _ => return Err(format!("arena {} failed to parse!", s))

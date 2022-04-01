@@ -28,11 +28,14 @@ pub struct Fighter {
 pub enum Class {
     Swarm, // 2d5 instead of d10
     Dom, // additional bonus point on domination
+    // called "angry skeleton" for reasons of 14 year olds
     Turtle, // opponent doesn't get bonus points on domination
     Tank, // roll 2 injury rolls and pick the highest
+    // called "chicken" in game
     Mutant, // roll 2 dice for a random stat and pick the highest
     Cleric, // win on a draw
     Naked, // extra point to start with
+    // called "senator" in game for reasons of 14 year olds
 }
 
 impl Default for Class {
@@ -43,7 +46,7 @@ impl Fighter {
     pub fn new(name: String, owner: String, class: Class, strength: i32, speed: i32, skill: i32) -> Fighter{
         Fighter {
             name, owner, class, strength, speed, skill,
-            ..Fighter::default() // hehe
+            ..Fighter::default()
         }
     }
 
@@ -141,7 +144,7 @@ impl Fighter {
             _ => {}
         }
          
-        let mut mutant_roll = 4usize;
+        let mut mutant_roll = 4usize; // saves checking if the fighter is a mutant twice
         if let Arena::Siphon = arena {} else { // no class effects if its siphon
             match self.class {
                 Class::Swarm => { // 2d5
@@ -161,7 +164,7 @@ impl Fighter {
 
 
         for i in 0..3 {
-            if i != mutant_roll {
+            if i != mutant_roll { // don't roll for the mutant stat
                 stats[i] += thread_rng().gen_range(1..11);
             }
         }
@@ -191,28 +194,27 @@ impl FromStr for Class { // much cleaner
     fn from_str(s: &str) -> Result<Self, String> {
         Ok(match s.to_lowercase().as_str() {
             "swarm" => Class::Swarm,
-            "dom" => Class::Dom,
+            "dom" | "skeleton" => Class::Dom,
             "turtle" => Class::Turtle,
-            "tank" => Class::Tank,
+            "tank" | "chicken" => Class::Tank,
             "mutant" => Class::Mutant,
             "cleric" => Class::Cleric,
-            "naked" => Class::Naked,
+            "naked" | "senator" => Class::Naked,
             _ => return Err(format!("class {} failed to parse!", s))
         })
     }
 }
 
-#[allow(unreachable_patterns)]
 impl fmt::Display for Class {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", match self {
             Class::Cleric => "cleric",
-            Class::Dom => "dom",
+            Class::Dom => "skeleton",
             Class::Turtle => "turtle",
-            Class::Tank => "tank",
+            Class::Tank => "chicken",
             Class::Mutant => "mutant",
             Class::Swarm => "swarm",
-            Class::Naked => "naked",
+            Class::Naked => "senator",
         })
     }
 }

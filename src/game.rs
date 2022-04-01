@@ -75,16 +75,16 @@ impl GameState {
         let name_head = "name".pad_to_width(longest_name_len); // pad out headings
         let owner_head = "owner".pad_to_width(longest_owner_len);
 
-        println!("{1}{0}{2}{0} class{0}strength{0}speed{0}skill{0}points{0}total{0}rating{0}kills", Self::TABLE_SEP, name_head, owner_head);
+        println!("{1}{0}{2}{0}   class{0}strength{0}speed{0}skill{0}points{0}total{0}rating{0}kills", Self::TABLE_SEP, name_head, owner_head);
         // class is done lazily cuz it's a discrete thing
-        // class as string will never be longer than 6
+        // class as string will never be longer than 8
         // if this fact ever changes FIX THIS
 
         let mut i = 0; // didnt want to do the with index thing
         for f in &self.fighters {
             let name_pad = f.name.pad_to_width_with_alignment(longest_name_len, Alignment::Right); // pad out names etc
             let owner_pad = f.owner.pad_to_width_with_alignment(longest_owner_len, Alignment::Right);
-            let class_pad = format!("{}", f.class).pad_to_width_with_alignment(6, Alignment::Right); // should possibly eliminate a magic number here
+            let class_pad = format!("{}", f.class).pad_to_width_with_alignment(8, Alignment::Right); // should possibly eliminate a magic number here
             let index_pad = i.to_string().pad_to_width_with_alignment(index_pad_amt, Alignment::Right);
 
             // name owner class st sp sk us tt rt kl
@@ -158,7 +158,12 @@ impl GameState {
             Ok(v) => v,
             Err(v) => v
         };
-        let _ = fs::write(filename, self.format_round(r)); // "lol", said the lazy dev. "lmao"
+        match fs::write(&filename, self.format_round(r)) {
+            Ok(_) => {},
+            Err(_) => {
+                println!("failed to write file {}!", filename)
+            }
+        }
     }
     pub fn display_next_round(&self) {
         match &self.next_round { // only display if a round exists
@@ -206,50 +211,45 @@ impl GameState {
     pub fn new_round(&mut self, po: &ProgramOptions, args: &mut Vec<String>) -> Result<(), String> { // generate round and store
         // let (mut matchups, sitting_out) = generate_matchups(&self.fighters);
         // matchups.append(&mut self.pre_matches);
-        let mut round = GameRound::new(&self.fighters, &mut self.pre_matches, self.num_rounds + 1);
+        //let mut round = GameRound::new(&self.fighters, &mut self.pre_matches, self.num_rounds + 1); // FIX THIS
 
-        if args.len() != 0 { // manual arena/mod choice
-            let mut arena: Option<String> = None;
-            let mut modifier: Option<String> = None;
-
-            args.insert(0, String::from("new-round")); // argparse needs the name of the program/command as args[0] to work
-
-            //println!("{:?}", args);
-
-            {
-                let mut ap = ArgumentParser::new();
-                ap.set_description("generates a new round in the current loaded game");
-                ap.refer(&mut arena).add_option(&["-a"], StoreOption, "choose an arena manually");
-                ap.refer(&mut modifier).add_option(&["-m"], StoreOption, "chose a modifier manually");
-
-                match ap.parse(args.clone(), &mut stdout(), &mut stderr()) {
-                    Ok(_) => {},
-                    Err(e) => match e {
-                        0 => {}
-                        _ => return Err(String::from("unknown argument parser error!"))
-                    }
+        let mut arena: Option<String> = None;
+        let mut modifier: Option<String> = None;
+        args.insert(0, String::from("new-round")); // argparse needs the name of the program/command as args[0] to work
+        
+        {
+            let mut ap = ArgumentParser::new();
+            ap.set_description("generates a new round in the current loaded game");
+            ap.refer(&mut arena).add_option(&["-a"], StoreOption, "choose an arena manually");
+            ap.refer(&mut modifier).add_option(&["-m"], StoreOption, "chose a modifier manually");
+            match ap.parse(args.clone(), &mut stdout(), &mut stderr()) {
+                Ok(_) => {},
+                Err(e) => match e {
+                    0 => {}
+                    _ => return Err(String::from("unknown argument parser error!"))
                 }
-            }
-
-            match arena {
-                Some(a) => {
-                    match a.parse::<Arena>() {
-                        Ok(v) => round.arena = v,
-                        Err(e) => return Err(e)
-                    }
-                }
-                None => {}
-            }
-            match modifier {
-                Some(m) => {
-                    match m.parse::<Modifier>() {
-                        Ok(v) => round.modifier = v,
-                        Err(e) => return Err(e)
-                    }
-                }
-                None => {}
             }
         }
+        let arena_parsed = match arena {
+            Some(a) => {
+                match a.parse::<Arena>() {
+                    Ok(v) => Some(v),
+                    Err(e) => return Err(e)
+                }
+            }
+            None => None
+        };
+        let modifier_parsed = match modifier {
+            Some(m) => {
+                match m.parse::<Modifier>() {
+                    Ok(v) => Some(v),
+                    Err(e) => return Err(e)
+                }
+            }
+            None => None
+        };
+
+        let round = GameRound::new(&self.fighters, &mut self.pre_matches, self.num_rounds + 1, arena_parsed, modifier_parsed);
 
         let r = Round::Standard(round);
 

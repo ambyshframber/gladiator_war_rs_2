@@ -75,6 +75,8 @@ fn run() -> Result<(), i32> {
         }
         let data = GwGlobalData::default();
         let _ = data.save_to_file(&global_path); // save it here as well as later
+        // not checking the write here is fine
+        // cuz it's a blank data file
         data
     }
     else { // file exists
@@ -220,9 +222,13 @@ fn run() -> Result<(), i32> {
         }
     }
 
-    let _ = po.global_data.save_to_file(&global_path); // bad practice
-
-    Ok(())
+    match po.global_data.save_to_file(&global_path) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            println!("{}", e);
+            Err(1)
+        }
+    }
 }
 
 #[allow(unused_variables)]

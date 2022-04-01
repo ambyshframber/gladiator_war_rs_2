@@ -32,7 +32,7 @@ this creates a new game with SEASON_NAME as the season name. PATH is optional, a
 
 having a path pointing to somewhere other than the current directory doesn't work quite right because of how i implemented my non-repeating filename function, so name collisions result in overwriting the file. be wary
 
-**load** usage: `gladiator-war [OPTIONS] load INDEX COMMAND`
+**load**: usage: `gladiator-war [OPTIONS] load INDEX COMMAND`
 
 loads a save game and allows you to perform actions on it
 
@@ -112,7 +112,17 @@ every player has a fighter, with 3 stats: strength, speed and skill. fighters st
 
 every fighter also has a class, which can change some things about how they behave in battle. they don't change much, and the game is still mainly up to the roll of the dice, but it just adds a bit more variety
 
-(i will write a proper list of classes Later but for now you can get rough descriptions from `src/fighter.rs`)
+classes are:
+
+- swarm: rolls 2d5 for stats instead of 1d10
+- skeleton: gains an extra point for dominating on a stat
+- turtle: opponents do not gain any bonus points for dominating (this and skeleton cancel out)
+- chicken: when making an injury roll, roll 2 dice and pick the best result
+- mutant: for a random stat, roll 2 dice and pick the best result
+- cleric: win when you would draw. if two clerics draw, then i can no longer help you. the ball is in your court. good luck
+- senator: start with 13 points instead of 12
+
+you are welcome to change these class names both in your rules and in the code. also, try to find some Funny Images to decrease the chance of the players taking this stupid game seriously
 
 **2. battles**
 
@@ -126,17 +136,12 @@ this is repeated for every stat, and at the end the fighter with the most rolls 
 
 if a fighter loses, they must take an injury roll. a d8 is rolled and injuries are applied according to the following table:
 
-1: death.
-
-2: major injury. -1 from all stats
-
-3: arm injury. -1 strength
-
-4: leg injury. -1 speed
-
-5: head injury. -1 skill
-
-6 - 8: full recovery
+- 1: death.
+- 2: major injury. -1 from all stats
+- 3: arm injury. -1 strength
+- 4: leg injury. -1 speed
+- 5: head injury. -1 skill
+- 6 - 8: full recovery
 
 **4. stat increases and rating**
 
@@ -152,6 +157,25 @@ players may arrange fights before the match is decided. this is just intended to
 
 all battles have an arena and modifier. these make some changes, ranging from small to large
 
-(again i don't have a list but you can check `src/round.rs`)
+arenas are:
+
+- amphitheater: does nothing
+- siphon: no class effects
+- climbing wall: dominating on strength instantly wins you the match
+- hills: double speed
+- mech suits: all stats higher than your skill stat are reduced to the level of your skill stat
+- crocodile pit: a draw counts as a loss for both players, as you do not lose against the crocodiles
+- soft play area: -1 from your highest stat
+
+modifiers are:
+
+- rulebook: does nothing
+- the crowd demands blood: -1 to injury rolls, and a bonus stat up if your opponent dies
+- medical assistance: +1 to injury rolls
+- oh shit the empress has a gun: 10% chance for a fighter to be shot when the match starts. this can happen to both fighters
+- pumpkin spice eye exams: all stat ups earned will be spent on skill
+- olympic inspector: fighters are matched with another fighter with similar rating. currently does not work with manual modifier selection
+
+go ahead and change these (and the classes) to fit your theming and framing devices. most of them were just chosen because i thought they would be funny
 
 ### happy pugiliating!
