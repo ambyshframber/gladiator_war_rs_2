@@ -30,8 +30,6 @@ lists all save games in the current global data file
 
 this creates a new game with SEASON_NAME as the season name. PATH is optional, and if not provided, the file is created in the current folder with the name generated from the season name. paths can be relative or absolute, but are expanded to absolute when they are stored. this is to allow the program to be run from anywhere and still load the save files correctly
 
-having a path pointing to somewhere other than the current directory doesn't work quite right because of how i implemented my non-repeating filename function, so name collisions result in overwriting the file. be wary
-
 **load**: usage: `gladiator-war [OPTIONS] load INDEX COMMAND`
 
 loads a save game and allows you to perform actions on it
@@ -46,7 +44,7 @@ valid commands are:
 
 **info**:
 
-prints info about the current save game. basically just the name and number of rounds played so far
+prints info about the current save game. currently just the name and number of rounds played so far
 
 **list-fighters**:
 
@@ -72,7 +70,7 @@ shows a given round from the past, including results
 
 **log-round**: usage: `... log-round INDEX`
 
-logs a round to a file. custom log names are not yet supported, so instead the program uses the default template specified in the global data file
+logs a round to a file. custom log names are not yet supported, so instead the program uses the template specified in the global data file. this template can be changed - `%S` is replaced with the season name, and `%R` is replaced with the round number
 
 **arrange-match**: usage: `... arrange-match INDEX1 INDEX2`
 

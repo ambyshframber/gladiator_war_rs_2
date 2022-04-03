@@ -11,7 +11,7 @@ pub struct GwGlobalData {
 impl Default for GwGlobalData {
     fn default() -> Self {
         GwGlobalData {
-            default_batlog_name: String::from("%S_batlog_%R"),
+            default_batlog_name: String::from("%S_batlog_%R.txt"),
             saves: Vec::new()
         }
     }
@@ -47,7 +47,7 @@ impl GwGlobalData {
     }
 
     pub fn save_to_file(&self, filename: &str) -> Result<(), String> {
-        match fs::write(filename, serde_json::to_string(self).unwrap()) {
+        match fs::write(filename, serde_json::to_string_pretty(self).unwrap()) {
             Ok(_) => Ok(()),
             Err(_) => Err(format!("failed to write file {}", filename))
         }

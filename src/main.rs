@@ -156,7 +156,7 @@ fn run() -> Result<(), i32> {
                 println!("[{}] {}", i, po.global_data.saves[i])
             }
         }
-        /*"add-save" => { // check validity of save, add, exit
+        "add-save" => { // check validity of save, add, exit
             match po.global_data.add_save(&args_2[0]) {
                 Ok(_) => {},
                 Err(e) => {
@@ -167,8 +167,7 @@ fn run() -> Result<(), i32> {
         }
         "delete-save" => {
             
-        }*/
-        // these both need redoing
+        }
 
         "new-game" => { // new-game name path
             let alen = args_2.len();
@@ -179,23 +178,23 @@ fn run() -> Result<(), i32> {
             let game = GameState::new_game(&args_2[0]);
             let filename = match alen {
                 1 => {
-                    let fname = args_2[0].replace(' ', "_");
-                    match utils::get_non_repeating_filename(".", &fname, "json") {
+                    let mut fname = args_2[0].replace(' ', "_");
+                    fname.push_str(".json");
+                    match utils::get_non_repeating_filename(&fname) {
                         Ok(n) => n,
-                        Err(n) => n
+                        Err(e) => {
+                            println!("{}", e);
+                            return Err(1)
+                        }
                     }
                 }
                 2..=usize::MAX => {
-                    let name_split = args_2[1].split('.').collect::<Vec<&str>>();
-                    let bodyslice = &name_split[..name_split.len()-1];
-                    let mut body = String::new();
-                    for i in bodyslice {
-                        body.push_str(&format!("{}.", i))
-                    }
-                    let body = &body[..body.len()-1]; // need to separate file name from the rest of the path
-                    match utils::get_non_repeating_filename(".", body, name_split[name_split.len()-1]) { // FIX THIS
+                    match utils::get_non_repeating_filename(&args_2[1]) {
                         Ok(n) => n,
-                        Err(n) => n
+                        Err(e) => {
+                            println!("{}", e);
+                            return Err(1)
+                        }
                     }
                 }
                 _ => {
@@ -283,14 +282,19 @@ fn do_things_to_existing_game(args: Vec<String>, mut game: GameState, po: &utils
             game.display_round(ri)
         }
         "log-round" => {
-            if args_2.len() != 1 {
+            if args_2.len() == 0 {
                 return Err((String::from("round number required"), 2))
             }
+            let mut path = None;
+            if args_2.len() > 1 {
+                path = Some(args_2[1].as_str())
+            }
+            //dbg!(path);
             let ri = match args_2[0].parse::<usize>() { // round index
                 Ok(v) => v,
                 Err(_) => return Err((String::from("round number failed to parse"), 2))
             };
-            game.log_round(ri, po)
+            game.log_round(ri, path, po)
         }
         "add-stats" => { // add-stats fi st sp sk
             let a2l = args_2.len();

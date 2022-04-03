@@ -145,8 +145,11 @@ impl GameState {
 
         ret
     }
-    fn log_round_priv(&self, r: &Round, po: &ProgramOptions) {
-        let filename = &po.global_data.default_batlog_name; // get template
+    fn log_round_priv(&self, r: &Round, po: &ProgramOptions, path: Option<&str>) {
+        let filename = match path {
+            None => &po.global_data.default_batlog_name, // get template
+            Some(p) => p
+        };
         let filename = filename.replace("%S", &self.season_name); // run replacements
         let round_num = match r {
             Round::Standard(v) => v.log.round_no,
@@ -154,7 +157,8 @@ impl GameState {
         };
         let filename = filename.replace("%R", &round_num.to_string());
         let filename = filename.replace(" ", "_"); // not strictly necessary but fuck you
-        let filename = match get_non_repeating_filename(".", &filename, "txt") {
+        //filename.push_str(".txt");
+        let filename = match get_non_repeating_filename(&filename) {
             Ok(v) => v,
             Err(v) => v
         };
@@ -179,9 +183,9 @@ impl GameState {
             println!("index out of range!") // exit without panicking
         }
     }
-    pub fn log_round(&self, number: usize, po: &ProgramOptions) {
+    pub fn log_round(&self, number: usize, path: Option<&str>, po: &ProgramOptions) {
         if self.prev_rounds.len() > number {
-            self.log_round_priv(&self.prev_rounds[number], po)
+            self.log_round_priv(&self.prev_rounds[number], po, path)
         }
         else {
             println!("index out of range!") // exit without panicking
@@ -200,7 +204,7 @@ impl GameState {
         }
     }
     pub fn save_to_file(&self, filename: &str) -> Result<(), String> {
-        match fs::write(filename, serde_json::to_string(self).unwrap()) {
+        match fs::write(filename, serde_json::to_string_pretty(self).unwrap()) {
             Ok(_) => Ok(()),
             Err(_) => Err(format!("failed to write file {}", filename))
         }
@@ -209,8 +213,8 @@ impl GameState {
     // game features
 
     pub fn new_round(&mut self, po: &ProgramOptions, args: &mut Vec<String>) -> Result<(), String> { // generate round and store
-        // let (mut matchups, sitting_out) = generate_matchups(&self.fighters);
-        // matchups.append(&mut self.pre_matches);
+        //let (mut matchups, sitting_out) = generate_matchups(&self.fighters);
+        //matchups.append(&mut self.pre_matches);
         //let mut round = GameRound::new(&self.fighters, &mut self.pre_matches, self.num_rounds + 1); // FIX THIS
 
         let mut arena: Option<String> = None;
@@ -300,7 +304,7 @@ impl GameState {
                     println!("{}", self.format_round(&r))
                 }
                 if po.logging {
-                    self.log_round_priv(&r, po)
+                    self.log_round_priv(&r, po, None)
                 }
             }
             Round::Boss(_) => unreachable!()

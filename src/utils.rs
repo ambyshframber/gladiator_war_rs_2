@@ -17,52 +17,75 @@ pub fn select_largest<T: std::cmp::PartialOrd>(a: T, b: T) -> T { // generic cuz
     }
 }
 
-// this is clunky as fuck someone please fix it
-pub fn get_non_repeating_filename(folder_path: &str, filename: &str, extension: &str) -> Result<String, String> { // does NOT want dots
-    let dir = match fs::read_dir(Path::new(folder_path)) {
+pub fn get_non_repeating_filename(full_path: &str) -> Result<String, String> {
+    let (mut folder_path, full_filename) = get_last(full_path, '/'); // split input into folder path and name
+
+    if folder_path == "" { // if full_path is just a filename, search current dir
+        folder_path = "."
+    }
+
+    let dir = match fs::read_dir(Path::new(folder_path)) { // get items in directory
         Ok(rd) => rd,
         Err(_) => return Err(format!("could not read dir {}", folder_path))
     };
 
     let mut files: Vec<String> = Vec::new();
 
+    let (filename, extension) = get_last(full_filename, '.'); // split name from extension
+
     for e in dir {
-        let entry_name = e.unwrap().file_name().into_string().unwrap();
-        if string_ends_with(&entry_name, extension) {
+        let entry_name = e.unwrap().file_name().into_string().unwrap(); // hope it doesnt error here
+        if string_ends_with(&entry_name, extension) { // if extensions are the same, add it to the list to be checked
             files.push(entry_name)
         }
     }
 
     let mut name_exists = false;
-    let check_string = format!("{}.{}", filename, extension);
     for f in &files {
-        if f == &check_string {
+        if f == &full_filename {
             name_exists = true;
             break
         }
     }
-    if !name_exists {
-        return Ok(format!("{}.{}", filename, extension))
+    if !name_exists { // name does not exist on first pass - input path/name is free
+        return Ok(full_path.to_string())
     }
 
     let mut iter = 1;
     let mut check_string;
     loop {
-        check_string = format!("{}_{}.{}", filename, iter, extension);
+        check_string = format!("{}_{}.{}", filename, iter, extension); // eg file_1.ext
         let mut name_exists = false;
         for f in &files {
             if f == &check_string {
                 name_exists = true;
-                break
+                break // stop checking on hit
             }
         }
-        if !name_exists {
+        if !name_exists { // if name is free, break
             break
         }
-        iter += 1
+        iter += 1 // increase number and check again
     }
 
-    Ok(check_string)
+    Ok(format!("{}/{}", folder_path, check_string))
+}
+
+pub fn get_last(s: &str, delim: char) -> (&str, &str) { // (name, ext)
+    //dbg!(s);
+    //dbg!(delim);
+    let split: Vec<&str> = s.split(delim).collect();
+    //dbg!(&split);
+    let last = split[split.len() - 1];
+
+    let main = if split.len() != 1 {
+        &s[..s.len() - (last.len() + 1)] // slice the input string instead of gluing vec back together
+    }
+    else {
+        ""
+    }; // if the input string doesnt split down, return empty string as main
+
+    (main, last)
 }
 
 fn string_ends_with(s: &str, e: &str) -> bool { // string, end
@@ -125,5 +148,16 @@ mod tests {
         assert!(string_ends_with("beans.file", "file"));
         assert!(!string_ends_with("beans.file", "wrong"));
         assert!(!string_ends_with("beans", "looooong"));
+    }
+    #[test]
+    fn test_split_ext() {
+        assert_eq!(get_last("file.e", '.'), ("file", "e"));
+        assert_eq!(get_last("file.beans.e", '.'), ("file.beans", "e"));
+
+    }
+    #[test]
+    fn combined_test() {
+        let (_, last) = get_last("beans.file", '.');
+        assert!(string_ends_with("beans.file", last))
     }
 }
