@@ -68,9 +68,9 @@ displays the next round scheduled, or informs you that there isn't one if there 
 
 shows a given round from the past, including results
 
-**log-round**: usage: `... log-round INDEX`
+**log-round**: usage: `... log-round INDEX [PATH]`
 
-logs a round to a file. custom log names are not yet supported, so instead the program uses the template specified in the global data file. this template can be changed - `%S` is replaced with the season name, and `%R` is replaced with the round number
+logs a round to a file. PATH is the path that the log should be written to. if it is not present, the template in the global data file is used. this template can be changed - `%S` is replaced with the season name, and `%R` is replaced with the round number
 
 **arrange-match**: usage: `... arrange-match INDEX1 INDEX2`
 
@@ -149,7 +149,7 @@ rating does play a part in this: if the winner has rating 3 or more higher than 
 
 **5. arranging fights**
 
-players may arrange fights before the match is decided. this is just intended to let some character develop in the game, and maybe instill lasting rivalries
+players may arrange fights before the match is decided. this is just intended to let some character develop in the game, and maybe instil lasting rivalries
 
 **6. arenas and modifiers**
 
@@ -172,7 +172,7 @@ modifiers are:
 - medical assistance: +1 to injury rolls
 - oh shit the empress has a gun: 10% chance for a fighter to be shot when the match starts. this can happen to both fighters
 - pumpkin spice eye exams: all stat ups earned will be spent on skill
-- olympic inspector: fighters are matched with another fighter with similar rating. currently does not work with manual modifier selection
+- olympic inspector: fighters are matched with another fighter with similar rating
 
 go ahead and change these (and the classes) to fit your theming and framing devices. most of them were just chosen because i thought they would be funny
 

@@ -374,7 +374,7 @@ fn do_things_to_existing_game(args: Vec<String>, mut game: GameState, po: &utils
     Ok(game)
 }
 
-fn print_help() {
+fn print_help() { // FIX THIS
     println!("welcome to version {} of the gladiator war CLI", VERSION);
     println!("please see the readme for usage instructions. it's kinda complicated")
 }

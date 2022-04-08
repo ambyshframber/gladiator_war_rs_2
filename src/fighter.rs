@@ -54,7 +54,7 @@ impl Fighter {
         match v.len() { // check you have all the fields
             6 => {}
             _ => {
-                return Err(format!("fighter vec parsing requires vec of length 6"))
+                return Err(format!("fighter parsing requires 6 arguments (NAME OWNER CLASS STRENGTH SPEED SKILL)"))
             }
         }
 

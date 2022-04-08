@@ -67,7 +67,13 @@ impl GameState {
             }
         }
 
-        let index_pad_amt = (self.fighters.len() - 1).to_string().len(); // ew
+        
+        let index_pad_amt = if self.fighters.len() > 0 {
+            (self.fighters.len() - 1).to_string().len() // ew
+        }
+        else {
+            0usize
+        };
         for _ in 0..(index_pad_amt + 3) { // adds spaces to pad the front of the headings
             print!(" ") // a stupid solution to a stupid problem
         }
@@ -75,13 +81,13 @@ impl GameState {
         let name_head = "name".pad_to_width(longest_name_len); // pad out headings
         let owner_head = "owner".pad_to_width(longest_owner_len);
 
-        println!("{1}{0}{2}{0}   class{0}strength{0}speed{0}skill{0}points{0}total{0}rating{0}kills", Self::TABLE_SEP, name_head, owner_head);
+        let headings = format!("{1}{0}{2}{0}class   {0}strength{0}speed{0}skill{0}points{0}total{0}rating{0}kills", Self::TABLE_SEP, name_head, owner_head);
         // class is done lazily cuz it's a discrete thing
         // class as string will never be longer than 8
         // if this fact ever changes FIX THIS
+        println!("{}", headings);
 
-        let mut i = 0; // didnt want to do the with index thing
-        for f in &self.fighters {
+        for (i, f) in self.fighters.iter().enumerate() {
             let name_pad = f.name.pad_to_width_with_alignment(longest_name_len, Alignment::Right); // pad out names etc
             let owner_pad = f.owner.pad_to_width_with_alignment(longest_owner_len, Alignment::Right);
             let class_pad = format!("{}", f.class).pad_to_width_with_alignment(8, Alignment::Right); // should possibly eliminate a magic number here
@@ -94,7 +100,6 @@ impl GameState {
                 print!("  (dead)")
             }
             println!("");
-            i += 1
         }
     }
     fn format_round(&self, round: &Round) -> String {
