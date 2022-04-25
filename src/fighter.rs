@@ -91,7 +91,7 @@ impl Fighter {
             return None
         }
 
-        let roll = if let Arena::Siphon = arena {thread_rng().gen_range(0..8)} 
+        let mut roll = if let Arena::Siphon = arena {thread_rng().gen_range(0..8)} 
         else {
             match self.class {
                 Class::Tank => {
@@ -100,6 +100,11 @@ impl Fighter {
                 _ => thread_rng().gen_range(0..8) // no other classes affect injury rolls (yet)
             }
         };
+        match modifier {
+            Modifier::TheCrowdDemandsBlood => roll -= 1,
+            Modifier::MedicalAssistance => roll += 1,
+            _ => {}
+        }
 
         batlog.set_injury(Some(roll));
 
@@ -145,6 +150,7 @@ impl Fighter {
         }
          
         let mut mutant_roll = 4usize; // saves checking if the fighter is a mutant twice
+        // 4 so it gets ignored by default later
         if let Arena::Siphon = arena {} else { // no class effects if its siphon
             match self.class {
                 Class::Swarm => { // 2d5

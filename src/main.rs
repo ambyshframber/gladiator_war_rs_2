@@ -3,10 +3,12 @@ use std::process::exit;
 use std::io::{stdout, stderr};
 use std::path::Path;
 use std::env::var;
+use std::fs::remove_file;
 
 use global::GwGlobalData;
 use game::GameState;
 use fighter::Fighter;
+use utils::confirm;
 
 mod game;
 mod fighter;
@@ -108,20 +110,25 @@ fn run() -> Result<(), i32> {
             let game_index = match args_2[0].parse::<usize>() { // get index of game filename in global data
                 Ok(i) => i,
                 Err(_) => {
-                    println!("game number didn't parse");
+                    println!("game number failed to parse");
                     return Err(2)
                 }
             };
             
             if po.global_data.saves.len() <= game_index { // check game exists
-                println!("game {} not found", game_index);
-                return Err(1)
+                println!("index out of range");
+                return Err(2)
             }
 
             let game_file = &po.global_data.saves[game_index]; // pull out path
 
             let game = match GameState::load_from_file(game_file) {
-                Ok(g) => g,
+                Ok(g) => {
+                    if po.verbosity > 0 {
+                        println!("loaded game {} from file {}", g.season_name, game_file)
+                    }
+                    g
+                }
                 Err(e) => {
                     println!("{}", e);
                     return Err(1)
@@ -157,6 +164,10 @@ fn run() -> Result<(), i32> {
             }
         }
         "add-save" => { // check validity of save, add, exit
+            if args_2.len() != 1 {
+                println!("wrong number of arguments for add-save command (expected 1)");
+                return Err(2)
+            }
             match po.global_data.add_save(&args_2[0]) {
                 Ok(_) => {},
                 Err(e) => {
@@ -166,7 +177,28 @@ fn run() -> Result<(), i32> {
             }
         }
         "delete-save" => {
-            
+            if args_2.len() != 1 {
+                println!("wrong number of arguments for delete-save command (expected 1)");
+                return Err(2)
+            }
+            let game_index = match args_2[0].parse::<usize>() { // get index of game filename in global data
+                Ok(i) => i,
+                Err(_) => {
+                    println!("game number failed to parse");
+                    return Err(2)
+                }
+            };
+            if game_index >= po.global_data.saves.len() {
+                println!("index out of range");
+                return Err(2)
+            }
+            let game_path = &po.global_data.saves[game_index];
+            if confirm(&format!("are you sure you want to delete the saved game at {}? [y/n]", game_path)) {
+                if po.verbosity > 0 { println!("removing file...") }
+                let _ = remove_file(game_path);
+                if po.verbosity > 0 { println!("removing entry in list...") }
+                po.global_data.saves.remove(game_index);
+            }
         }
 
         "new-game" => { // new-game name path
@@ -204,7 +236,7 @@ fn run() -> Result<(), i32> {
             match game.save_to_file(&filename) {
                 Ok(_) => {
                     let path = Path::new(&filename);
-                    let path = path.canonicalize().unwrap(); // this shouldnt fail
+                    let path = path.canonicalize().unwrap(); // this shouldnt fail because the file definitely exists
                     let filename = path.to_str().unwrap(); // also shouldnt fail unless the user summons demons with their file system
                     po.global_data.saves.push(filename.to_string())
                 }

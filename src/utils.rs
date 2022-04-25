@@ -2,16 +2,17 @@ use std::cmp::Ordering;
 use std::fs;
 use std::path::Path;
 use std::fmt;
+use std::io::{stdin, Write, stdout};
 
 use crate::global;
 
-pub fn select_largest<T: std::cmp::PartialOrd>(a: T, b: T) -> T { // generic cuz im feeling like a clever fucker today
+pub fn select_largest<T: std::cmp::PartialOrd>(a: T, b: T) -> T {
     match a.partial_cmp(&b) {
         None => a,
         Some(c) => {
             match c {
                 Ordering::Less => b,
-                _ => a // faster than matching greater and equal separately. rustc probably knows the optimisation but oh well
+                _ => a
             }
         }
     }
@@ -140,6 +141,28 @@ pub fn fmt_vec_with_tabs<T: fmt::Display>(v: &Vec<T>, number_of_tabs: usize) -> 
     ret
 }
 
+pub fn confirm(prompt: &str) -> bool {
+    loop {
+        print!("{} ", prompt);
+        let _ = stdout().flush();
+        let mut buf = String::new();
+        let _ = stdin().read_line(&mut buf);
+        //println!("{}", buf);
+        match buf.trim().to_lowercase().as_str() {
+            "yes"|"y" => {
+                return true
+            }
+            "no"|"n" => {
+                return false
+            }
+            _ => {
+                println!("please select y/n")
+            }
+        }
+
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -153,7 +176,6 @@ mod tests {
     fn test_split_ext() {
         assert_eq!(get_last("file.e", '.'), ("file", "e"));
         assert_eq!(get_last("file.beans.e", '.'), ("file.beans", "e"));
-
     }
     #[test]
     fn combined_test() {
